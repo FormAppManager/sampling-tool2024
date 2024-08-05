@@ -1,0 +1,310 @@
+{% extends 'index.html' %} {% block content %}
+<div id="alertName" class="alert alert-danger" role="alert" style="display:none;">
+  Ingrese el nombre del lugar para iniciar!
+</div>
+<div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Registro Manual</h5>
+      <p class="card-text">
+        Sección para el registro manual de tiempos.
+      </p>
+      <p class="card-text">
+        <small class="text-muted">descargue los datos antes de salir de la página</small>
+      </p>
+      <form id="form">
+        <div class="form-group">
+          <label for="hospitalName">Hospital</label>
+          <input type="text" class="form-control" id="hospitalName" aria-describedby="emailHelp" placeholder="Nombre Hospital">
+          <small id="emailHelp" class="form-text text-muted">nombre del lugar del centro de salud.</small>
+        </div>
+        <div class="form-group">
+          <label for="roomTrack">Consultorios</label>
+          <input type="number" class="form-control" id="roomTrack" placeholder="Cantidad">
+          <small id="emailHelp" class="form-text text-muted">cantidad de consultorios.</small>
+        </div>
+        <button type="button" onclick="createTime();" class="btn btn-outline-warning btn-block">Crear Consultorios</button>
+      </form>
+      <br>
+      <div id="timesControl" style="display:none;">
+        <div class="card">
+          <div class="card-body text-center">
+            <blockquote class="blockquote mb-0">
+              <span>Pacientes: </span> <span id="count"> -- </span>
+              <div class="text-center"><h1>
+                <span id="hour">00</span> :
+                <span id="min">00</span> :
+                <span id="sec">00</span> :
+                <span id="milisec">00</span>
+              </h1></div>
+              <button id="start" onclick="trackTime();" type="button" class="btn btn-primary btn-block">Entrada</button>
+              <p class="card-text">
+                <small class="text-muted">tiempo entre llegadas de pacientes...</small>
+              </p>
+            </blockquote>
+          </div>
+        </div>      
+        <div class="card text-center">
+          <div id="container" class="text-center"></div>
+        </div>
+        <form>
+          <label for="newPerson">Descargar archivo con tiempos</label>
+          <div class="form-group">
+            <button id="newPerson" onclick="createCSV();" type="button" class="btn btn-success btn-block">Descargar CSV</button>
+          </div>
+        </form>
+        <p class="card-text">
+          <small class="text-muted">generación de un archivo CSV con la información recolectada...</small>
+        </p>
+      </div>
+      
+    </div>
+    
+    <script>
+      // new people in timer
+      const rows = []
+      var x;
+      // time values
+      var milisec = 0;
+      var sec = 0;
+      var min = 0;
+      var hour = 0;
+      // Output return
+      var miliSecOut = 0;
+      var secOut = 0;
+      var minOut = 0;
+      var hourOut = 0;
+      // start the timer new in
+      function trackTime() {
+        time = hour + ":" + min + ":" + sec + ":" + milisec;
+        rows.push([time]);
+        clearInterval(x);
+        reset();
+        x = setInterval(timer, 10);
+        console.log("-------- ", rows)   
+        document.getElementById("count").innerHTML = rows.length 
+      }
+      // main timer to show
+      function timer() {
+        miliSecOut = checkTime(milisec);
+        secOut = checkTime(sec);
+        minOut = checkTime(min);
+        hourOut = checkTime(hour);
+
+        milisec = ++milisec;
+
+        if (milisec === 100) {
+          milisec = 0;
+          sec = ++sec;
+        }
+
+        if (sec == 60) {
+          min = ++min;
+          sec = 0;
+        }
+
+        if (min == 60) {
+          min = 0;
+          hour = ++hour;
+        }
+        document.getElementById("milisec").innerHTML = miliSecOut;
+        document.getElementById("sec").innerHTML = secOut;
+        document.getElementById("min").innerHTML = minOut;
+        document.getElementById("hour").innerHTML = hourOut;
+      }
+
+      /* Adds 0 when value is <10 */
+      function checkTime(i) {
+        if (i < 10) {
+          i = "0" + i;
+        }
+        return i;
+      }
+      // reset the timer
+      function reset() {
+        milisec = 0;
+        sec = 0;
+        min = 0
+        hour = 0;
+
+        document.getElementById("milisec").innerHTML = "00";
+        document.getElementById("sec").innerHTML = "00";
+        document.getElementById("min").innerHTML = "00";
+        document.getElementById("hour").innerHTML = "00";
+      }
+      
+      // create csv file to download
+      function createCSV(){
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        rows.forEach(function(rowArray) {
+            let row = rowArray.join(",");
+            csvContent += row + "\r\n";
+        });
+
+        var nameValue = document.getElementById("hospitalName").value;
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+
+        nameValue = nameValue.replace(/ /g, '');
+        if(!nameValue){
+          nameValue = "hostitalName"
+        } 
+        console.log("------ name: ", nameValue);
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", nameValue + ".csv");
+        document.body.appendChild(link);
+        link.click();
+      }
+
+      //////////////////////////////////////////////
+      // create a watch for each room
+      var roomWatch = function(elem, roomName) {
+        const rows1 = [];
+        var x1;
+        // time values
+        var milisec1 = 0;
+        var sec1 = 0;
+        var min1 = 0;
+        var hour1 = 0;
+        // Output return
+        var miliSecOut1 = 0;
+        var secOut1 = 0;
+        var minOut1 = 0;
+        var hourOut1 = 0;
+        var startButton = createButton1("Entrada", start1);
+        var stopButton = createButton1("Salida", stop1);
+        var span = createTag("span");
+        var div = createTag("div");
+        var hr1 = createTag("hr");
+        var roomTag = createTag("h5");
+        var countP = createTag("h6");
+
+        roomTag.innerHTML = "Consultorio: 0" + roomName
+        countP.innerHTML = "-- pacientes: " + rows1.length + " -- "
+        elem.appendChild(roomTag);
+        //elem.appendChild(div);
+        elem.appendChild(countP);
+        elem.appendChild(span);
+        elem.appendChild(div);
+        elem.appendChild(startButton);
+        elem.appendChild(stopButton);
+        elem.appendChild(hr1);
+
+        reset1()
+
+        // private functions
+        function createTag(tagName) {
+          var newDiv = document.createElement(tagName);
+          return newDiv
+        }
+
+        function createButton1(action, handler) {
+          var a = document.createElement("button");
+          if(action === "Entrada"){
+            a.className = "btn btn-outline-success btn-block"
+          }else{
+            a.className = "btn btn-outline-danger btn-block"
+          }
+          a.innerHTML = action;
+          a.addEventListener("click", function(event) {
+            handler();
+            event.preventDefault();
+          });
+          return a;
+        }
+
+        function start1() {
+          if(!x1){
+            reset1();
+            x1 = setInterval(timer1, 10);
+          }
+        }
+
+        function stop1() {
+          if(x1){
+            time1 = hour1 + ":" + min1 + ":" + sec1 + ":" + milisec1;
+            rows1.push([time1]);
+            countP.innerHTML = "-- pacientes: " + rows1.length + " -- ";
+            console.log(rows1);
+            clearInterval(x1);
+            x1 = null;
+          }
+        }
+
+        // main timer to show
+        function timer1() {
+          miliSecOut1 = checkTime1(milisec1);
+          secOut1 = checkTime1(sec1);
+          minOut1 = checkTime1(min1);
+          hourOut1 = checkTime1(hour1);
+
+          milisec1 = ++milisec1;
+
+          if (milisec1 === 100) {
+            milisec1 = 0;
+            sec1 = ++sec1;
+          }
+
+          if (sec1 == 60) {
+            min1 = ++min1;
+            sec1 = 0;
+          }
+
+          if (min1 == 60) {
+            min1 = 0;
+            hour1 = ++hour1;
+          }
+          span.innerHTML = hourOut1 + ":" + minOut1 + ":" + secOut1 + ":" +  miliSecOut1;
+        }
+
+        /* Adds 0 when value is <10 */
+        function checkTime1(i) {
+          if (i < 10) {
+            i = "0" + i;
+          }
+          return i;
+        }
+        // reset the timer
+        function reset1() {
+          milisec1 = 0;
+          sec1 = 0;
+          min1 = 0
+          hour1 = 0;
+
+          span.innerHTML = "00:00:00";
+        }
+      }
+      //////////////////////////////////////////////
+      
+      // create the html timers for room
+      function createTime(){
+        const container = document.getElementById('container');
+        let inputName = document.getElementById("hospitalName").value;
+        let num = parseInt(document.getElementById('roomTrack').value, 10);
+        container.innerHTML = '' 
+
+        if(!inputName){
+          $('#alertName').show();
+        }
+        else {
+          $('#alertName').hide();
+          var cont = []
+          document.getElementById("timesControl").style.display = 'block'
+          for(var i=0; i< num; i++){
+            var elem = document.createElement("div");
+            elem.id = "container1";
+            new roomWatch(elem, i+1);
+            document.getElementById('container').appendChild(elem);
+          } 
+        }
+      }
+      
+      // loading html view
+      (function (d) {
+        d.getElementById('form').onsubmit = function () {
+          d.getElementById('loadingManual').style.display = 'block';
+        };
+      }(document));
+    </script>
+</div>
+{% endblock %}

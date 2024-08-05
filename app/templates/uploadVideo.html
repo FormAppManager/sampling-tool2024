@@ -1,0 +1,194 @@
+{% extends 'index.html' %} {% block content %}
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Subir Video</h5>
+    <button type="button" onclick=window.location.replace('http://localhost:5000/uploadVideo') class="btn btn-outline-warning btn-block">Nuevo Video</button>
+    <p class="card-text">
+      los videos a subir debe de cumplir con los formatos corespondientes para
+      su correcto funcionamiento
+    </p>
+    <form action="uploadVideo" method="POST" enctype="multipart/form-data">
+    <p class="card-text">
+      Titulo de analisis:
+    </p>
+      <input id="token" name="token" type="text" value="{{usToken}}" style="display:none">
+      <input id="name" type="text" class="form-control" style="margin-block:20px" name="name"/>
+      <input id="up" type="file" class="form-control" name="file" accept="video/*"/>
+      <input type="text" readonly class="form-control-plaintext" id="points" name="coordinates" value="">
+      <button type="button" onclick="getPoints()" class="btn btn-outline-primary btn-block">Coordenadas</button>
+      <button type="submit" class="btn btn-outline-dark btn-block" onclick="$('#loading').show();">
+        Analizar Video!
+      </button>
+    </form>
+    <p class="card-text">
+
+    </p>
+    <div id="loading" style="display:none;">
+      <div>
+        <p class="card-text">
+          Esto podria demorar un poco... <br>
+          No cierre la ventana hasta que termine el envío del video
+        </p>
+      </div>
+      <div>
+        <div class="spinner-grow text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-secondary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-danger" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-warning" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-info" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-light" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="spinner-grow text-dark" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function reloadWindow(){
+         window.location.replace('http://localhost:5000/home/{{usToken}}')
+        //window.location.replace('http://34.122.48.179/home/{{usToken}}')
+      }
+  </script>  
+  {% if show_drawer != True %}
+  
+  <div id="drawerCard" class="card" style="visibility:hidden; margin-bottom: 30px;">
+    <div class="card-body">
+      <h5 class="card-title">Seleccione el Area de Interes</h5>
+      <p class="card-text">El area de interes son los consultorios donde se quiere tomar los tiempos</p>
+      <p class="card-text"><small class="text-muted">Dibuje con le mouse el area deseada haciendo click en cada punto hasta cerrar la figura...</small></p>
+    </div>
+    
+
+    <canvas width="300" height="300" id="canvas" style="border: 5px solid #000000;"></canvas>
+    
+    <script>
+      var video = document.createElement("video");
+      var canvas=document.getElementById("canvas");
+      var context=canvas.getContext("2d");
+      var cw=canvas.width;
+      var ch=canvas.height;
+
+      video.addEventListener('loadeddata', function() {
+        reloadRandomFrame();
+      }, false);
+
+      video.addEventListener('seeked', function() {
+        context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.drawImage(video, 0, 0, cw, ch);
+      }, false);
+
+
+      var playSelectedFile = function(event) {
+        var file = this.files[0];
+        var fileURL = URL.createObjectURL(file);
+        video.src = fileURL;
+        coordinates = [];
+        getPoints();
+        document.getElementById('drawerCard').style.visibility = 'visible';
+      }
+
+      var input = document.getElementById('up');
+      input.addEventListener('change', playSelectedFile, false);
+      
+    function getPoints() {
+        var label = document.getElementById("points");
+        var resp = coordinates.map(element => {
+            return [element.x, element.y]
+        });
+        console.log("resp: ", resp)
+        label.value = resp;
+        document.getElementById("points").value = JSON.stringify(coordinates);
+    }
+
+      function reloadRandomFrame() {
+        if (!isNaN(video.duration)) {
+          var rand = Math.round(Math.random() * video.duration * 1000) + 1;
+          video.currentTime = rand / 1000;
+        }
+      }
+
+      function reOffset(){
+        var BB=canvas.getBoundingClientRect();
+        offsetX=BB.left;
+        offsetY=BB.top;  
+        height = BB.height;
+        width = BB.width
+        scale = height/300
+      }
+      var offsetX,offsetY;
+      reOffset();
+      window.onscroll=function(e){ reOffset(); }
+
+      context.lineWidth=2;
+      context.strokeStyle='orange';
+
+      var coordinates = [];
+
+      $("#canvas").mousedown(function(e){handleMouseDown(e);});
+
+      function handleMouseDown(e){
+        if(coordinates.length>10){return;}
+
+        // tell the browser we're handling this event
+        e.preventDefault();
+        e.stopPropagation();
+
+        mouseX=parseInt((e.clientX-offsetX)/scale);
+        mouseY=parseInt((e.clientY-offsetY)/scale);
+
+        coordinates.push({x:mouseX,y:mouseY});
+        drawPolygon();
+        console.log("coordinates: ",coordinates)
+      }
+
+      function drawPolygon(){
+        context.clearRect(0,0,cw,ch);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.beginPath();
+        context.arc(coordinates[0].x, coordinates[0].y, 1, 0, Math.PI * 2, true);
+        context.moveTo(coordinates[0].x, coordinates[0].y);
+        for(index=1; index<coordinates.length;index++) {
+          context.arc(coordinates[index].x, coordinates[index].y, 1, 0, Math.PI * 2, true);
+          context.lineTo(coordinates[index].x, coordinates[index].y);
+        }
+        context.closePath();
+        context.stroke();
+      }
+      (function (d) {
+        d.getElementById('form').onsubmit = function () {
+          d.getElementById('submit').style.display = 'block';
+          d.getElementById('drawerCard').style.visibility = 'hidden';
+          d.getElementById('loading2').style.display = 'block';
+        };
+      }(document));
+    </script>
+  </div>
+
+  {% endif %}
+
+  {% if show_drawer == True %}
+  <div class="d-grid gap-2 col-6 mx-auto">
+    <p>El análisis se ha iniciado exitosamente.</p>
+
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

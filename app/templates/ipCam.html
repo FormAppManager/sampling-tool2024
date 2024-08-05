@@ -1,0 +1,22 @@
+{% extends 'index.html' %} {% block content %}
+<div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Cámara IP</h5>
+      <p class="card-text">
+        Ingrese la dirección de la cámara IP que desea transmitir.
+      </p>
+      
+      <form class="form-group" id="form" action="ipCamera" method="POST" enctype="multipart/form-data">
+        <label for="ipAdress">Dirección IP</label>
+        <small id="ipAdressHelp" class="form-text text-muted">
+          formato rtsp: rtsp://ip:port/unicast/channel_number/stream_type/live 
+        </small>
+        <input type="text" class="form-control" id="ipAdress" name="ipValue" aria-describedby="ipAdressHelp" placeholder="enlace IP"> 
+        <small id="ipAdressHelp" class="form-text text-muted">ingrese la dirección de la cámara. ejemplo: rtsp://freja.hiof.no:1935/rtplive/_definst_/hessdalen03.stream</small>
+        <div>
+          <button type="submit" class="btn btn-outline-warning btn-block">Transmitir Señal</button>
+        </div>
+      </form>
+    </div>
+</div>
+{% endblock %}

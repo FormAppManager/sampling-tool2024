@@ -1,0 +1,17 @@
+{% extends 'index.html' %} {% block content %}
+<div class="card text-center">
+  <div class="card-header h2">Herramienta de Muestreo</div>
+  <div class="card-body">
+    <h5 class="card-title">Muestreo a partir de videos</h5>
+    <p class="card-text">
+      Sistema destinado para el muestreo de datos sobre los tiempos de personas
+      en los procesos de atencion de la consulta externa.
+    </p>
+    <a href="uploadVideo" class="btn btn-dark">Análisis puertas</a>
+    <a href="manualTimer" class="btn btn-dark">Registro Manual</a>
+    <a href="ipCamera" class="btn btn-dark">Camara IP</a>
+    <a href="uploadVideoCinta" class="btn btn-dark">Análisis cinta de fabricación</a>
+  </div>
+  <div class="card-footer text-muted"></div>
+</div>
+{% endblock %}

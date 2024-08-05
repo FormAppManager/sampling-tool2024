@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: videosampling-deployment
+  labels:
+    app: videosampling
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: videosampling
+  template:
+    metadata:
+      labels:
+        app: videosampling
+    spec:
+      containers:
+      - name: sampling-tool
+        image: registry.gitlab.com/discrete-event-simulations/sampling-tool
+        ports:
+        - containerPort: 5000
+      imagePullSecrets:
+      - name: regcred
+
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: videosampling-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: videosampling
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000

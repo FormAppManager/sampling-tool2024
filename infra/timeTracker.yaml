@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: flask
+spec:
+ strategy:
+   rollingUpdate:
+     maxSurge: 1
+     maxUnavailable: 1
+   type: RollingUpdate
+ replicas: 1
+ selector:
+   matchLabels:
+     app: flask
+ template:
+   metadata:
+     labels:
+       app: flask
+   spec:
+     containers:
+       - name: flask
+         image: gcr.io/formsappdb/k8s_api/pi-sampling-tool:v0.1.0
+         resources:
+           limits:
+             cpu: "1"
+             memory: "2Gi"
+           requests:
+             cpu: "1"
+             memory: "2Gi"
+         ports:
+           - containerPort: 5000
